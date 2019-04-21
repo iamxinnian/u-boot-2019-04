@@ -35,7 +35,8 @@
 #include <asm/arch/system.h>
 #include <asm/armv7.h>
 #include "common_setup.h"
-#include "exynos5_setup.h"
+#include "exynos4412_setup.h"
+
 
 /* These are the things we can do during low-level init */
 enum {
@@ -174,6 +175,15 @@ int do_lowlevel_init(void)
 	int actions = 0;
 
 	arch_cpu_init();
+
+__asm__ __volatile__ ( \
+	"ldr r0, =0x11000100\n" \
+	"ldr r1, =0x1\n" \
+	"str r1, [r0]\n" \
+	"ldr r0, =0x11000104\n" \
+	"str r1, [r0]\n" \
+	"b	.\n" \
+	);
 
 #if !defined(CONFIG_SYS_L2CACHE_OFF) && defined(CONFIG_EXYNOS5420)
 	/*

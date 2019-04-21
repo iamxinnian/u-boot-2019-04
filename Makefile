@@ -6,6 +6,9 @@ SUBLEVEL =
 EXTRAVERSION =
 NAME =
 
+ARCH := arm
+CROSS_COMPILE :=/usr/local/arm/arm-linux-gnueabi-6.5/bin/arm-linux-gnueabi-
+
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README

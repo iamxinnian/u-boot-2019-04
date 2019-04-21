@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Odroid-U3/X2 board device tree source
+ *
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ *		http://www.samsung.com
+ */
+
+/dts-v1/;
+#include "exynos4412.dtsi"
+
+/ {
+	model = "Itop4412 based on Exynos4412";
+	compatible = "samsung,itop4412", "samsung,exynos4412";
+
+	aliases {
+
+	};
+
+};
