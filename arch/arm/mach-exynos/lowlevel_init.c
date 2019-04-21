@@ -176,15 +176,6 @@ int do_lowlevel_init(void)
 
 	arch_cpu_init();
 
-__asm__ __volatile__ ( \
-	"ldr r0, =0x11000100\n" \
-	"ldr r1, =0x1\n" \
-	"str r1, [r0]\n" \
-	"ldr r0, =0x11000104\n" \
-	"str r1, [r0]\n" \
-	"b	.\n" \
-	);
-
 #if !defined(CONFIG_SYS_L2CACHE_OFF) && defined(CONFIG_EXYNOS5420)
 	/*
 	 * Init L2 cache parameters here for use by boot and resume
