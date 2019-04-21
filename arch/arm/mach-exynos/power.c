@@ -193,14 +193,6 @@ void set_ps_hold_ctrl(void)
 	{
 #ifdef CONFIG_ITOP4412
 		exynos4412_set_ps_hold_ctrl();
-		__asm__ __volatile__ ( \
-			"ldr r0, =0x11000100\n" \
-			"ldr r1, =0x1\n" \
-			"str r1, [r0]\n" \
-			"ldr r0, =0x11000104\n" \
-			"str r1, [r0]\n" \
-			"b	.\n" \
-			);
 #endif
 	}
 }
