@@ -49,7 +49,6 @@ unsigned char MUX_STAT_Check(unsigned int *addr,unsigned char n)
  */
 void system_clock_init(void)
 {
-	blink_led2(0x4,0x7f); //添加闪灯与之后闪灯频率对比
 	struct exynos4x12_clock *clk =
 			(struct exynos4x12_clock *)samsung_get_base_clock();
 
@@ -201,6 +200,4 @@ void system_clock_init(void)
 						| MUX_STAT_Check(&clk->mux_stat_g3d,6)
 						| MUX_STAT_Check(&clk->mux_stat_g3d,10))
 			continue;
-	blink_led2(0x4,0x7f); //添加闪灯与之前闪灯频率对比
-	blink_led2(0xffffffff,0xffffff); //相当于死循环
 }

@@ -12,6 +12,8 @@
 void led2on(void);
 void led2off(void);
 optimize0 void blink_led2(unsigned int Times,unsigned int DelayTime);
-
+optimize0 char mem_write(unsigned int *addr,unsigned int data);
+optimize0 char mem_read(unsigned int *addr,unsigned int *data);
+optimize0 char mem_test(unsigned int *start_addr1,unsigned int *start_addr2,unsigned size1,unsigned size2);
 #endif
 

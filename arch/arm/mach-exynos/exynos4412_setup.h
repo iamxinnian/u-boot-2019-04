@@ -647,11 +647,11 @@
 #define DIRECT_CMD_NOP	0x07000000
 #define DIRECT_CMD_ZQ	0x0a000000
 #define DIRECT_CMD_CHIP1_SHIFT	(1 << 20)
-#define MEM_TIMINGS_MSR_COUNT	4
+#define MEM_TIMINGS_MSR_COUNT	5
+#define MEMCONTROL_END      (1 | 2 | (1 << 4) | (1 << 24))
 #define CTRL_START	(1 << 0)
 #define CTRL_DLL_ON	(1 << 1)
 #define AREF_EN		(1 << 5)
-#define DRV_TYPE	(1 << 6)
 
 struct mem_timings {
 	unsigned direct_cmd_msr[MEM_TIMINGS_MSR_COUNT];
@@ -686,13 +686,11 @@ struct mem_timings {
 
 #ifdef CONFIG_ITOP4412
 /* Interleave: 2Bit, Interleave_bit1: 0x15, Interleave_bit0: 0x7 */
-#define APB_SFR_INTERLEAVE_CONF_VAL	0x20001507
+#define APB_SFR_INTERLEAVE_CONF_VAL		0x8000000c
 #define APB_SFR_ARBRITATION_CONF_VAL	0x00000001
 #endif
 
-#define INTERLEAVE_ADDR_MAP_START_ADDR	0x40000000
-#define INTERLEAVE_ADDR_MAP_END_ADDR	0xbfffffff
-#define INTERLEAVE_ADDR_MAP_EN		0x00000001
+
 
 #ifdef CONFIG_MIU_1BIT_INTERLEAVED
 /* Interleave_bit0: 0xC*/
@@ -715,15 +713,16 @@ struct mem_timings {
 #define DIRECT_CMD1	0x00020000
 #define DIRECT_CMD2	0x00030000
 #define DIRECT_CMD3	0x00010002
-#define DIRECT_CMD4	0x00000328
+#define DIRECT_CMD4	0x00000100
+#define DIRECT_CMD5	0x00000428
 
 #define CTRL_ZQ_MODE_NOTERM	(0x1 << 0)
 #define CTRL_ZQ_START		(0x1 << 1)
 #define CTRL_ZQ_DIV		(0 << 4)
-#define CTRL_ZQ_MODE_DDS	(0x7 << 8)
+#define CTRL_ZQ_MODE_DDS	(0x5 << 8)
 #define CTRL_ZQ_MODE_TERM	(0x2 << 11)
 #define CTRL_ZQ_FORCE_IMPN	(0x5 << 14)
-#define CTRL_ZQ_FORCE_IMPP	(0x6 << 17)
+#define CTRL_ZQ_FORCE_IMPP	(0x2 << 17)
 #define CTRL_DCC		(0xE38 << 20)
 #define ZQ_CONTROL_VAL		(CTRL_ZQ_MODE_NOTERM | CTRL_ZQ_START\
 				| CTRL_ZQ_DIV | CTRL_ZQ_MODE_DDS\
@@ -733,17 +732,17 @@ struct mem_timings {
 #define ASYNC			(0 << 0)
 #define CLK_RATIO		(1 << 1)
 #define DIV_PIPE		(1 << 3)
-#define AWR_ON			(1 << 4)
+#define AWR_OFF			(0 << 4)
 #define AREF_DISABLE		(0 << 5)
-#define DRV_TYPE_DISABLE	(0 << 6)
+#define DRV_TYPE			(3 << 6)
 #define CHIP0_NOT_EMPTY		(0 << 8)
 #define CHIP1_NOT_EMPTY		(0 << 9)
 #define DQ_SWAP_DISABLE		(0 << 10)
 #define QOS_FAST_DISABLE	(0 << 11)
 #define RD_FETCH		(0x3 << 12)
 #define TIMEOUT_LEVEL0		(0xFFF << 16)
-#define CONCONTROL_VAL		(ASYNC | CLK_RATIO | DIV_PIPE | AWR_ON\
-				| AREF_DISABLE | DRV_TYPE_DISABLE\
+#define CONCONTROL_VAL		(ASYNC | CLK_RATIO | DIV_PIPE | AWR_OFF\
+				| AREF_DISABLE | DRV_TYPE\
 				| CHIP0_NOT_EMPTY | CHIP1_NOT_EMPTY\
 				| DQ_SWAP_DISABLE | QOS_FAST_DISABLE\
 				| RD_FETCH | TIMEOUT_LEVEL0)
@@ -753,10 +752,10 @@ struct mem_timings {
 #define DPWRDN_TYPE		(0 << 3)
 #define TP_DISABLE		(0 << 4)
 #define DSREF_DIABLE		(0 << 5)
-#define ADD_LAT_PALL		(1 << 6)
+#define ADD_LAT_PALL		(0 << 6)
 #define MEM_TYPE_DDR3		(0x6 << 8)
 #define MEM_WIDTH_32		(0x2 << 12)
-#define NUM_CHIP_2		(1 << 16)
+#define NUM_CHIP_2		(0 << 16)
 #define BL_8			(0x3 << 20)
 #define MEMCONTROL_VAL		(CLK_STOP_DISABLE | DPWRDN_DISABLE\
 				| DPWRDN_TYPE | TP_DISABLE | DSREF_DIABLE\
@@ -765,23 +764,26 @@ struct mem_timings {
 
 
 #define CHIP_BANK_8		(0x3 << 0)
-#define CHIP_ROW_14		(0x2 << 4)
 #define CHIP_COL_10		(0x3 << 8)
 #define CHIP_MAP_INTERLEAVED	(1 << 12)
-#define CHIP_MASK		(0xe0 << 16)
-#ifdef CONFIG_MIU_LINEAR
+#ifdef CONFIG_SDRAM_SCP_SIZE_1G
+#define CHIP_ROW_14		(0x2 << 4)
+#define CHIP_MASK		(0xc0 << 16)
 #define CHIP0_BASE		(0x40 << 24)
 #define CHIP1_BASE		(0x60 << 24)
-#else
-#define CHIP0_BASE		(0x20 << 24)
-#define CHIP1_BASE		(0x40 << 24)
+#endif
+#ifdef CONFIG_SDRAM_SCP_SIZE_2G
+#define CHIP_ROW_14		(0x3 << 4)
+#define CHIP_MASK		(0x80 << 16)
+#define CHIP0_BASE		(0x40 << 24)
+#define CHIP1_BASE		(0x80 << 24)
 #endif
 #define MEMCONFIG0_VAL		(CHIP_BANK_8 | CHIP_ROW_14 | CHIP_COL_10\
 				| CHIP_MAP_INTERLEAVED | CHIP_MASK | CHIP0_BASE)
 #define MEMCONFIG1_VAL		(CHIP_BANK_8 | CHIP_ROW_14 | CHIP_COL_10\
 				| CHIP_MAP_INTERLEAVED | CHIP_MASK | CHIP1_BASE)
 
-#define TP_CNT			(0xff << 24)
+#define TP_CNT			(0x64 << 24)
 #define PRECHCONFIG		TP_CNT
 
 #define CTRL_OFF		(0 << 0)
@@ -799,14 +801,14 @@ struct mem_timings {
 #define CTRL_SHIFTC		(0x6 << 0)
 #define CTRL_REF		(8 << 4)
 #define CTRL_SHGATE		(1 << 29)
-#define TERM_READ_EN		(1 << 30)
-#define TERM_WRITE_EN		(1 << 31)
+#define TERM_READ_EN		(0 << 30)
+#define TERM_WRITE_EN		(0 << 31)
 #define CONTROL1_VAL		(CTRL_SHIFTC | CTRL_REF | CTRL_SHGATE\
 				| TERM_READ_EN | TERM_WRITE_EN)
 
 #define CONTROL2_VAL		0x00000000
-
-#ifdef CONFIG_ITOP4412
+/*
+#ifdef CONFIG_CLK_200
 #define TIMINGREF_VAL		0x000000BB
 #define TIMINGROW_VAL		0x4046654f
 #define	TIMINGDATA_VAL		0x46400506
@@ -824,4 +826,12 @@ struct mem_timings {
 #define	TIMINGPOWER_VAL		0x5444033d
 #endif
 #endif
+*/
+#define TIMINGREF_VAL		0x000000BB
+#define TIMINGROW_VAL		0x7846654f
+#define	TIMINGDATA_VAL		0x46400506
+#define	TIMINGPOWER_VAL		0x52000A3C
+
+
 #endif
+

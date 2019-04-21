@@ -61,3 +61,67 @@ optimize0 void blink_led2(unsigned int Times,unsigned int DelayTime)
 	}
 	return;
 }
+
+optimize0 char mem_write(unsigned int *addr,unsigned int data)
+{
+	*addr=data;
+	return 0;
+}
+
+optimize0 char mem_read(unsigned int *addr,unsigned int *data)
+{
+	*data=*addr;
+	return 0;
+}
+
+optimize0 char mem_test(unsigned int *start_addr1,unsigned int *start_addr2,unsigned size1,unsigned size2)
+{
+	unsigned int i=0;
+	unsigned int *start_write_addr=start_addr1;
+	unsigned int *start_read_addr=start_addr1;
+	if(size1==0)
+	{
+		return -2;
+	}
+
+	//write test data
+	for(i = 0;i < size1; i++)
+	{
+		*start_write_addr=(unsigned int)start_write_addr+i;
+		start_write_addr++;
+	}
+	if(size2 != 0)
+	{
+		start_write_addr=start_addr2;
+		for(i = 0;i < size2; i++)
+		{
+			*start_write_addr=(unsigned int)start_write_addr+i;
+			start_write_addr++;
+		}
+	}
+
+	//read and check data
+	for(i = 0;i < size1; i++)
+	{
+		if(*start_read_addr != ((unsigned int)start_read_addr+i))
+		{
+			return -1;
+		}
+		start_read_addr++;
+	}
+	if(size2 != 0)
+	{
+		start_read_addr=start_addr2;
+		for(i = 0;i < size2; i++)
+		{
+			if(*start_read_addr != ((unsigned int)start_read_addr+i))
+			{
+				return -1;
+			}
+			start_read_addr++;
+		}
+
+	}
+
+	return 0;
+}
