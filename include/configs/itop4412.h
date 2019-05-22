@@ -14,8 +14,6 @@
 #define CONFIG_EXYNOS4412		1	/* which is a EXYNOS44120 SoC */
 #define CONFIG_ITOP4412			1	/* working with itop4412*/
 
-#define CONFIG_SYS_DCACHE_OFF		1
-
 /* ITOP4412 has 4 bank of DRAM */
 #define CONFIG_NR_DRAM_BANKS		4
 #define CONFIG_SYS_SDRAM_BASE		0x40000000
@@ -27,7 +25,7 @@
 #endif
 
 #ifdef CONFIG_SDRAM_SCP_SIZE_2G
-#define SDRAM_BANK_SIZE			(512 << 20)	/* 256 MB */
+#define SDRAM_BANK_SIZE			(512 << 20)	/* 512 MB */
 #endif
 
 /* memtest works on */
@@ -44,7 +42,7 @@
 
 #define CONFIG_SYS_MEM_TOP_HIDE	(1 << 20)	/* ram console */
 
-#define CONFIG_SYS_MONITOR_BASE	0x00000000
+//#define CONFIG_SYS_MONITOR_BASE	0x00000000
 
 /* Power Down Modes */
 #define S5P_CHECK_SLEEP			0x00000BAD
@@ -53,7 +51,7 @@
 
 /* MMC SPL */
 #define CONFIG_SPL_TEXT_BASE	0x02023400
-
+/*
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"loadaddr=0x40007000\0" \
 	"rdaddr=0x48000000\0" \
@@ -84,25 +82,24 @@
 		"fi; " \
 	"fi;" \
 	"load mmc ${mmcdev} ${loadaddr} uImage; bootm ${loadaddr} "
-
+*/
 #define CONFIG_CLK_1000_400_200
 
 /* MIU (Memory Interleaving Unit) */
 
-#define CONFIG_SYS_MMC_ENV_DEV		0
-#define CONFIG_ENV_SIZE			(16 << 10)	/* 16 KB */
+#define CONFIG_SYS_MMC_ENV_DEV		(1)
+#define CONFIG_ENV_SIZE			(8 << 10)	/* 16 KB */
 #define RESERVE_BLOCK_SIZE		(512)
 #define BL1_SIZE			(8 << 10) /*8 K reserved for BL1*/
-#define CONFIG_ENV_OFFSET		(RESERVE_BLOCK_SIZE + BL1_SIZE)
+#define BL2_SIZE			(16 << 10) /*16 K reserved for BL1*/
+#define CONFIG_ENV_OFFSET		(RESERVE_BLOCK_SIZE + BL1_SIZE + BL2_SIZE +COPY_BL2_SIZE)
 
 #define CONFIG_SPL_MAX_FOOTPRINT	(14 * 1024)
-
+#define UBOOT_SIZE		(2<< 20)
 #define CONFIG_SYS_INIT_SP_ADDR		0x02040000
-
-#define BL2_SIZE			(16 << 10) /*16 K reserved for BL1*/
 /* U-Boot copy size from boot Media to DRAM.*/
-#define UBOOT_SIZE		(300 << 10)
-#define BL2_START_OFFSET	((CONFIG_ENV_OFFSET + BL2_SIZE)/512)
-#define BL2_SIZE_BLOC_COUNT	(UBOOT_SIZE/512)
+#define COPY_BL2_SIZE		0x80000
+#define BL2_START_OFFSET	((RESERVE_BLOCK_SIZE + BL1_SIZE + BL2_SIZE)/512)
+#define BL2_SIZE_BLOC_COUNT	(COPY_BL2_SIZE/512)
 
 #endif	/* __CONFIG_H */

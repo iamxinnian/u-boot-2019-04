@@ -36,7 +36,7 @@
 #include <asm/armv7.h>
 #include "common_setup.h"
 #include "exynos4412_setup.h"
-
+#include <asm/arch/clk.h>
 
 /* These are the things we can do during low-level init */
 enum {
@@ -224,7 +224,7 @@ int do_lowlevel_init(void)
 #endif
 #endif
 		mem_ctrl_init(actions & DO_MEM_RESET);
-		tzpc_init();
+		//tzpc_init();//关闭才能拷贝uboot
 	}
 
 	return actions & DO_WAKEUP;
