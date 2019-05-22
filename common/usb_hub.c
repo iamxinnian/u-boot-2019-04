@@ -37,6 +37,8 @@
 #include <asm/unaligned.h>
 
 #include <usb.h>
+#include <asm/gpio.h>
+#include <asm/arch/gpio.h>
 
 #define USB_BUFSIZ	512
 
@@ -209,7 +211,6 @@ static void usb_hub_power_on(struct usb_hub_device *hub)
 	      max(100, (int)pgood_delay) + 1000);
 }
 
-#if !CONFIG_IS_ENABLED(DM_USB)
 static struct usb_hub_device hub_dev[USB_MAX_HUB];
 static int usb_hub_index;
 
@@ -219,8 +220,14 @@ void usb_hub_reset(void)
 
 	/* Zero out global hub_dev in case its re-used again */
 	memset(hub_dev, 0, sizeof(hub_dev));
-}
 
+	gpio_direction_output(EXYNOS4X12_GPIO_M33, 0);
+	gpio_direction_output(EXYNOS4X12_GPIO_M24, 0);
+
+	gpio_direction_output(EXYNOS4X12_GPIO_M24, 1);
+	gpio_direction_output(EXYNOS4X12_GPIO_M33, 1);
+}
+/*
 static struct usb_hub_device *usb_hub_allocate(void)
 {
 	if (usb_hub_index < USB_MAX_HUB)
@@ -229,8 +236,7 @@ static struct usb_hub_device *usb_hub_allocate(void)
 	printf("ERROR: USB_MAX_HUB (%d) reached\n", USB_MAX_HUB);
 	return NULL;
 }
-#endif
-
+*/
 #define MAX_TRIES 5
 
 static inline char *portspeed(int portstatus)
