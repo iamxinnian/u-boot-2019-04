@@ -13,6 +13,7 @@
 /* High Level Configuration Options */
 #define CONFIG_EXYNOS4412		1	/* which is a EXYNOS44120 SoC */
 #define CONFIG_ITOP4412			1	/* working with itop4412*/
+#define CONFIG_SUPPORT_EMMC_BOOT	1
 
 /* ITOP4412 has 4 bank of DRAM */
 #define CONFIG_NR_DRAM_BANKS		4
