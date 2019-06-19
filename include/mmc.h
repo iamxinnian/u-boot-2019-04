@@ -822,6 +822,7 @@ int mmc_start_init(struct mmc *mmc);
  * @param preinit	preinit flag value
  */
 void mmc_set_preinit(struct mmc *mmc, int preinit);
+int mmc_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data);
 
 #ifdef CONFIG_MMC_SPI
 #define mmc_host_is_spi(mmc)	((mmc)->cfg->host_caps & MMC_MODE_SPI)

@@ -100,7 +100,6 @@ static int do_fastboot(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 
 	if (argc < 2)
 		return CMD_RET_USAGE;
-
 	while (argc > 1 && **(argv + 1) == '-') {
 		char *arg = *++argv;
 

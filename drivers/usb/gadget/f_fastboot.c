@@ -350,7 +350,6 @@ static unsigned int rx_bytes_expected(struct usb_ep *ep)
 	int rx_remain = fastboot_data_remaining();
 	unsigned int rem;
 	unsigned int maxpacket = ep->maxpacket;
-
 	if (rx_remain <= 0)
 		return 0;
 	else if (rx_remain > EP_BUFFER_SIZE)
@@ -421,7 +420,7 @@ static void rx_handler_command(struct usb_ep *ep, struct usb_request *req)
 	char *cmdbuf = req->buf;
 	char response[FASTBOOT_RESPONSE_LEN] = {0};
 	int cmd = -1;
-
+	
 	if (req->status != 0 || req->length == 0)
 		return;
 

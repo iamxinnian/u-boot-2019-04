@@ -15,6 +15,7 @@
 #include <div64.h>
 #include <linux/compat.h>
 #include <android_image.h>
+#include <decompress_ext4.h>
 
 #define FASTBOOT_MAX_BLK_WRITE 16384
 
@@ -23,6 +24,11 @@
 struct fb_mmc_sparse {
 	struct blk_desc	*dev_desc;
 };
+
+int do_mmcops1(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
+int do_mmc_write(cmd_tbl_t *cmdtp, int flag,int argc, char * const argv[]);
+int do_mmc_dev1(cmd_tbl_t *cmdtp, int flag,int argc, char * const argv[]);
+int get_mmcinfo_capacity(void);
 
 static int part_get_info_by_name_or_alias(struct blk_desc *dev_desc,
 		const char *name, disk_partition_t *info)
@@ -81,6 +87,7 @@ static lbaint_t fb_mmc_blk_write(struct blk_desc *block_dev, lbaint_t start,
 	return blks;
 }
 
+#ifndef CONFIG_ITOP4412
 static lbaint_t fb_mmc_sparse_write(struct sparse_storage *info,
 		lbaint_t blk, lbaint_t blkcnt, const void *buffer)
 {
@@ -127,8 +134,10 @@ static void write_raw_image(struct blk_desc *dev_desc, disk_partition_t *info,
 	       part_name);
 	fastboot_okay(NULL, response);
 }
+#endif
 
 #ifdef CONFIG_ANDROID_BOOT_IMAGE
+#ifndef CONFIG_ITOP4412
 /**
  * Read Android boot image header from boot partition.
  *
@@ -289,6 +298,7 @@ static int fb_mmc_update_zimage(struct blk_desc *dev_desc,
 	return 0;
 }
 #endif
+#endif
 
 /**
  * fastboot_mmc_get_part_info() - Lookup eMMC partion by name
@@ -322,6 +332,71 @@ int fastboot_mmc_get_part_info(char *part_name, struct blk_desc **dev_desc,
 	return r;
 }
 
+#define SECTOR_BITS             9       /* 512B */
+#define ext4_printf(args, ...)
+
+int write_raw_chunk(char* data, unsigned int sector, unsigned int sector_size) {
+        char run_cmd[64];
+        int err ;
+        ext4_printf("write raw data in %d size %d \n", sector, sector_size);
+        sprintf(run_cmd,"mmc write  0x%x 0x%x 0x%x",(int)data, sector, sector_size);
+        err = run_command(run_cmd, 0);
+
+
+        return (1-err); //mj
+}
+
+int write_compressed_ext4(char* img_base, unsigned int sector_base) {
+        unsigned int sector_size;
+        int total_chunks;
+        ext4_chunk_header *chunk_header;
+        ext4_file_header *file_header;
+
+        file_header = (ext4_file_header*)img_base;
+        total_chunks = file_header->total_chunks;
+
+        ext4_printf("total chunk = %d \n", total_chunks);
+
+        img_base += EXT4_FILE_HEADER_SIZE;
+
+        while(total_chunks) {
+                chunk_header = (ext4_chunk_header*)img_base;
+                sector_size = (chunk_header->chunk_size * file_header->block_size) >> SECTOR_BITS;
+
+                switch(chunk_header->type)
+                {
+                case EXT4_CHUNK_TYPE_RAW:
+                        ext4_printf("raw_chunk \n");
+                        write_raw_chunk(img_base + EXT4_CHUNK_HEADER_SIZE,
+                                                        sector_base, sector_size);
+                                sector_base += sector_size;
+                                break;
+
+                case EXT4_CHUNK_TYPE_FILL:
+                        ext4_printf("fill_chunk \n");
+                        sector_base += sector_size;
+                        break;
+
+                case EXT4_CHUNK_TYPE_NONE:
+                        ext4_printf("none chunk \n");
+                        sector_base += sector_size;
+                        break;
+
+                default:
+                        ext4_printf("unknown chunk type \n");
+                        sector_base += sector_size;
+                        break;
+                }
+                total_chunks--;
+                ext4_printf("remain chunks = %d \n", total_chunks);
+
+                img_base += chunk_header->total_size;
+        };
+
+        ext4_printf("write done \n");
+        return 0;
+}
+
 /**
  * fastboot_mmc_flash_write() - Write image to eMMC for fastboot
  *
@@ -330,6 +405,55 @@ int fastboot_mmc_get_part_info(char *part_name, struct blk_desc **dev_desc,
  * @download_bytes: Size of image data
  * @response: Pointer to fastboot response buffer
  */
+#ifdef CONFIG_ITOP4412
+void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
+			      u32 download_bytes, char *response)
+{
+	char down_add[9]={0};
+	unsigned int addr = (uintptr_t)download_buffer;
+	unsigned int start_8G = 0xaeed;
+	unsigned int start_16G = 0x8000;
+	sprintf(down_add,"%x",addr);
+
+	char *open_emmc[2]  = { "open","   "};
+	char *close_emmc[2]  = { "close","   "};
+	char *argv_uboot[5]  = { "mmc","write", (char *)down_add,"0","455"};
+	char *argv_kernel[5]  = { "mmc","write",(char *)down_add,"460","5000"};
+	char *argv_dtb[5]  = { "mmc","write", (char *)down_add,"5460","a0"};
+
+	static cmd_tbl_t cmdtp;
+	char value[] = {"mmc"};
+	//char run_cmd[64];
+
+	cmdtp.name =(char *)(&value);
+	cmdtp.maxargs = 29;
+	cmdtp.cmd = do_mmc_write;
+	cmdtp.usage = NULL;
+
+	if(strstr(cmd,"bootloader") != NULL)
+	{
+		printf("---%s---\n", cmd);
+		do_mmc_dev1(NULL, 0, 2, open_emmc); //open emmc
+		do_mmcops1(&cmdtp, 0, 5, argv_uboot);
+		do_mmc_dev1(NULL, 0, 2, close_emmc); //close emmc
+	} else if (strstr(cmd, "kernel") != NULL) {
+		printf("---%s---\n", cmd);
+		do_mmcops1(&cmdtp, 0, 5, argv_kernel);
+	} else if (strstr(cmd, "dtb") != NULL) {
+		printf("---%s---\n", cmd);
+		do_mmcops1(&cmdtp, 0, 5, argv_dtb);
+	} else if (strstr(cmd, "system") != NULL) {
+		printf("---%s---\n", cmd);
+		if (get_mmcinfo_capacity() > 8) {
+			write_compressed_ext4((char *) addr, start_16G);
+		} else {
+			write_compressed_ext4((char *) addr, start_8G);
+		}
+	}
+	printf("........ success........\n");
+	fastboot_okay(NULL, response);
+}
+#else
 void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
 			      u32 download_bytes, char *response)
 {
@@ -428,6 +552,7 @@ void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
 	}
 }
 
+#endif
 /**
  * fastboot_mmc_flash_erase() - Erase eMMC for fastboot
  *
