@@ -17,7 +17,6 @@
 #include <part.h>
 #include <search.h>
 #include <errno.h>
-#include <asm/arch/power.h>
 
 #define __STR(X) #X
 #define STR(X) __STR(X)

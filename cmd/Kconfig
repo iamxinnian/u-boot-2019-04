@@ -1339,6 +1339,11 @@ config CMD_WOL
 
 endif
 
+config CMD_FDISK
+	bool "fdisk"
+	help
+		fdisk for samsung
+
 menu "Misc commands"
 
 config CMD_BMP
