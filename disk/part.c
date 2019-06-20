@@ -315,6 +315,8 @@ void part_print(struct blk_desc *dev_desc)
 
 #endif /* CONFIG_HAVE_BLOCK_DEVICE */
 
+
+
 int part_get_info(struct blk_desc *dev_desc, int part,
 		       disk_partition_t *info)
 {

@@ -495,7 +495,7 @@
 				| (MMC0_RATIO << 0))
 
 /* CLK_DIV_FSYS2 */
-#define MMC2_RATIO		0x3
+#define MMC2_RATIO		0xf
 #define MMC2_PRE_RATIO		0x3
 #define MMC3_RATIO		0x3
 #define MMC3_PRE_RATIO		0x3
