@@ -612,11 +612,13 @@ int do_size(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 
 	if (fs_set_blk_dev(argv[1], argv[2], fstype))
 		return 1;
-
+	env_set_hex("filesize", 0);
 	if (fs_size(argv[3], &size) < 0)
 		return CMD_RET_FAILURE;
 
 	env_set_hex("filesize", size);
+
+	printf("%s size =%d bytes",argv[3],(unsigned int)size);
 
 	return 0;
 }

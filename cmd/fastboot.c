@@ -13,6 +13,8 @@
 #include <fastboot.h>
 #include <net.h>
 #include <usb.h>
+#include <mmc.h>
+#include <fb_mmc.h>
 #include <watchdog.h>
 
 static int do_fastboot_udp(int argc, char *const argv[],
@@ -159,3 +161,212 @@ U_BOOT_CMD(
 	fastboot, CONFIG_SYS_MAXARGS, 1, do_fastboot,
 	"run as a fastboot usb or udp device", fastboot_help_text
 );
+
+#define CFG_UPDATE_FILE_SRC_DEV		1 //MJ
+
+/* SD Fusing : read images from FAT partition of SD Card, and write it to boot device.
+ *
+ * NOTE
+ * - sdfuse is not a original code of fastboot
+ * - Fusing image from SD Card is not a original part of Fastboot protocol.
+ * - This command implemented at this file to re-use an existing code of fastboot */
+int do_sdfuse (cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+{
+	int ret = 1;
+	struct mmc *mmc = NULL;
+	char run_cmd[60]={0};
+	ulong FileSize=0;
+	char response=0;
+	mmc = find_mmc_device(CFG_UPDATE_FILE_SRC_DEV);
+
+	if (mmc == NULL) //mj
+	{
+		printf("*****************************\n");
+		printf("NO Updating SD Card!\n");
+		printf("*****************************\n");
+		return -1;
+
+	}
+	else
+	{
+		ret = mmc_init(mmc);
+		if (ret) {
+			printf("*****************************\n");
+			printf("NO Updating SD Card!\n");
+			printf("*****************************\n");
+			return ret;
+		}
+
+	}
+	if (argc < 2)
+	{
+		return -1;
+	}
+
+	if ((argc == 2) && !strcmp(argv[1], "flashall")) //mj
+	{
+		sprintf(run_cmd,"fatsize mmc 1 u-boot-iTOP-4412.bin");
+		ret=run_command(run_cmd,0);
+		FileSize=env_get_hex("filesize",0);
+		sprintf(run_cmd,"fatload mmc 1 0x50000000 u-boot-iTOP-4412.bin");
+		ret |=run_command(run_cmd,0);
+		if(FileSize == 0 || ret)
+		{
+			printf("file:u-boot-iTOP-4412.bin not exist!\n");
+			return -1;
+		}
+		fastboot_mmc_flash_write("bootloader",(void *)0x50000000,FileSize,&response);
+
+		sprintf(run_cmd,"fatsize mmc 1 uImage");
+		ret=run_command(run_cmd,0);
+		FileSize=env_get_hex("filesize",0);
+		sprintf(run_cmd,"fatload mmc 1 0x50000000 uImage");
+		ret |=run_command(run_cmd,0);
+		if(FileSize == 0 || ret)
+		{
+			printf("file:uImage not exist!\n");
+			return -1;
+		}
+		fastboot_mmc_flash_write("kernel",(void *)0x50000000,FileSize,&response);
+
+		sprintf(run_cmd,"fatsize mmc 1 exynos4412-itop-elite.dtb");
+		ret=run_command(run_cmd,0);
+		FileSize=env_get_hex("filesize",0);
+		sprintf(run_cmd,"fatload mmc 1 0x50000000 exynos4412-itop-elite.dtb");
+		ret |=run_command(run_cmd,0);
+		if(FileSize == 0 || ret)
+		{
+			printf("file:exynos4412-itop-elite.dtb not exist!\n");
+			return -1;
+		}
+		fastboot_mmc_flash_write("dtb",(void *)0x50000000,FileSize,&response);
+
+		sprintf(run_cmd,"fatformat mmc 0:1");
+		run_command(run_cmd,0);
+		sprintf(run_cmd,"ext4format mmc 0:2");
+		run_command(run_cmd,0);
+		sprintf(run_cmd,"ext4format mmc 0:3");
+		run_command(run_cmd,0);
+		sprintf(run_cmd,"ext4format mmc 0:4");
+		run_command(run_cmd,0);
+		sprintf(run_cmd,"fatsize mmc 1 system.img");
+		ret=run_command(run_cmd,0);
+		FileSize=env_get_hex("filesize",0);
+		sprintf(run_cmd,"fatload mmc 1 0x50000000 system.img");
+		ret |=run_command(run_cmd,0);
+		if(FileSize == 0 || ret)
+		{
+			printf("file:system.img not exist!\n");
+			return -1;
+		}
+		fastboot_mmc_flash_write("system",(void *)0x50000000,FileSize,&response);
+		return 0;
+	}else if ((argc == 4) && !strcmp(argv[1], "flash"))
+	{
+		if(!strcmp(argv[2], "bootloader"))
+		{
+			sprintf(run_cmd,"fatsize mmc 1 %s",argv[3]);
+			ret=run_command(run_cmd,0);
+			FileSize=env_get_hex("filesize",0);
+			sprintf(run_cmd,"fatload mmc 1 0x50000000 %s",argv[3]);
+			ret |=run_command(run_cmd,0);
+			if(FileSize == 0 || ret)
+			{
+				printf("file:%s not exist!\n",argv[3]);
+				return -1;
+			}
+			fastboot_mmc_flash_write("bootloader",(void *)0x50000000,FileSize,&response);
+			return 0;
+		}else if(!strcmp(argv[2], "kernel"))
+		{
+			sprintf(run_cmd,"fatsize mmc 1 %s",argv[3]);
+			ret=run_command(run_cmd,0);
+			FileSize=env_get_hex("filesize",0);
+			sprintf(run_cmd,"fatload mmc 1 0x50000000 %s",argv[3]);
+			ret |=run_command(run_cmd,0);
+			if(FileSize == 0 || ret)
+			{
+				printf("file:%s not exist!\n",argv[3]);
+				return -1;
+			}
+			fastboot_mmc_flash_write("kernel",(void *)0x50000000,FileSize,&response);
+			return 0;
+		}else if(!strcmp(argv[2], "dtb"))
+		{
+			sprintf(run_cmd,"fatsize mmc 1 %s",argv[3]);
+			ret=run_command(run_cmd,0);
+			FileSize=env_get_hex("filesize",0);
+			sprintf(run_cmd,"fatload mmc 1 0x50000000 %s",argv[3]);
+			ret |=run_command(run_cmd,0);
+			if(FileSize == 0 || ret)
+			{
+				printf("file:%s not exist!\n",argv[3]);
+				return -1;
+			}
+			fastboot_mmc_flash_write("dtb",(void *)0x50000000,FileSize,&response);
+			return 0;
+		}else if(!strcmp(argv[2], "system"))
+		{
+			sprintf(run_cmd,"fatformat mmc 0:1");
+			run_command(run_cmd,0);
+			sprintf(run_cmd,"ext4format mmc 0:2");
+			run_command(run_cmd,0);
+			sprintf(run_cmd,"ext4format mmc 0:3");
+			run_command(run_cmd,0);
+			sprintf(run_cmd,"ext4format mmc 0:4");
+			run_command(run_cmd,0);
+			sprintf(run_cmd,"fatsize mmc 1 %s",argv[3]);
+			ret=run_command(run_cmd,0);
+			FileSize=env_get_hex("filesize",0);
+			sprintf(run_cmd,"fatload mmc 1 0x50000000 %s",argv[3]);
+			ret |=run_command(run_cmd,0);
+			if(FileSize == 0 || ret)
+			{
+				printf("file:%s not exist!\n",argv[3]);
+				return -1;
+			}
+			fastboot_mmc_flash_write("system",(void *)0x50000000,FileSize,&response);
+			return 0;
+		}
+	}else if ((argc == 3) && !strcmp(argv[1], "erase"))
+	{
+		if(!strcmp(argv[2], "fat"))
+		{
+			sprintf(run_cmd,"ext4format mmc 0:1");
+			run_command(run_cmd,0);
+			return 0;
+		}else if(!strcmp(argv[2], "system"))
+		{
+			sprintf(run_cmd,"ext4format mmc 0:2");
+			run_command(run_cmd,0);
+			return 0;
+		}else if(!strcmp(argv[2], "userdata"))
+		{
+			sprintf(run_cmd,"ext4format mmc 0:3");
+			run_command(run_cmd,0);
+			return 0;
+		}else if(!strcmp(argv[2], "cache"))
+		{
+			sprintf(run_cmd,"ext4format mmc 0:4");
+			run_command(run_cmd,0);
+			return 0;
+		}else{
+			printf("command error!\n");
+			return -1;
+		}
+	}else{
+		printf("command error!\n");
+		return -1;
+	}
+	return 0;
+}
+
+U_BOOT_CMD(
+	sdfuse,	4,	1,	do_sdfuse,
+	"sdfuse  - read images from FAT partition of SD card and write them to booting device.",
+	"sdfuse flashall                         - flash boot.img, system.img,\n"
+	"                                          erase userdata, cache, and reboot.\n"
+	"sdfuse flash <partition> [ <filename> ] - write a file to a partition.\n"
+	"sdfuse erase <partition>                - erase (format) a partition."
+);
+
