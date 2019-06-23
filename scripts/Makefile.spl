@@ -212,6 +212,10 @@ ifdef CONFIG_SAMSUNG
 ALL-y	+= $(obj)/$(BOARD)-spl.bin
 endif
 
+ifdef CONFIG_ITOP4412
+ALL-y	+=$(objtree)/u-boot-iTOP-4412.bin
+endif
+
 ifneq ($(CONFIG_TARGET_SOCFPGA_GEN5)$(CONFIG_TARGET_SOCFPGA_ARRIA10),)
 ALL-y	+= $(obj)/$(SPL_BIN).sfp
 endif
@@ -310,6 +314,12 @@ $(obj)/$(BOARD)-spl.bin: $(obj)/u-boot-spl.bin
 	$(if $(wildcard $(objtree)/spl/board/samsung/$(BOARD)/tools/mk$(BOARD)spl),\
 	$(objtree)/spl/board/samsung/$(BOARD)/tools/mk$(BOARD)spl,\
 	$(objtree)/tools/mkexynosspl) $(VAR_SIZE_PARAM) $< $@
+endif
+
+ifdef CONFIG_ITOP4412
+$(objtree)/u-boot-iTOP-4412.bin:$(obj)/$(BOARD)-spl.bin
+	 @cat $(objtree)/board/samsung/itop4412/tools/NBL1.bin $(objtree)/$(obj)/$(BOARD)-spl.bin \
+	 $(objtree)/u-boot.bin > $(objtree)/u-boot-iTOP-4412.bin
 endif
 
 quiet_cmd_objcopy = OBJCOPY $@
