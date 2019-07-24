@@ -224,7 +224,7 @@ int do_lowlevel_init(void)
 #endif
 #endif
 		mem_ctrl_init(actions & DO_MEM_RESET);
-		//tzpc_init();//关闭才能拷贝uboot
+		tzpc_init();//关闭才能拷贝uboot
 	}
 
 	return actions & DO_WAKEUP;
