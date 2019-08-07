@@ -506,7 +506,7 @@
 
 /* CLK_DIV_FSYS3 */
 #define MMC4_RATIO		0x3
-#define MMC4_PRE_RATIO		0x3
+#define MMC4_PRE_RATIO		0x4
 #define CLK_DIV_FSYS3_VAL	((MMC4_PRE_RATIO << 8) \
 				| (MMC4_RATIO << 0))
 

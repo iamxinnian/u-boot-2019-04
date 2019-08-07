@@ -274,7 +274,7 @@ int make_mmc_partition(int total_block_count, unsigned char *mbr, int flag, char
 		block_offset = calc_unit((unsigned long long)simple_strtoul(argv[4], NULL, 0)*1024*1024, sdInfo);
 	else
 	{
-		if (strcmp(argv[2], "0") == 0)// TF card
+		if (strcmp(argv[2], "1") == 0)// TF card
 			block_offset = calc_unit(_300MB, sdInfo);
 		else
 			block_offset = calc_unit(USER_DATA_PART_SIZE, sdInfo);
